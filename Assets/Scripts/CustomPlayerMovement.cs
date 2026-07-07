@@ -90,10 +90,27 @@ public class CustomPlayerMovement : MonoBehaviour
                           orientation.right * moveInput.x;
 
         Vector3 flatVel = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
-        if (flatVel.magnitude < moveSpeed)
+
+        if (grounded)
         {
-            float forceMult = grounded ? 10f : 10f * airMultiplier;
-            rb.AddForce(moveDir.normalized * moveSpeed * forceMult, ForceMode.Force);
+            if (flatVel.magnitude < moveSpeed)
+            {
+                rb.AddForce(moveDir.normalized * moveSpeed * 10f, ForceMode.Force);
+            }
+        }
+        else
+        {
+            // Air control: always allow steering, even above moveSpeed,
+            // but scale it down so it doesn't feel like ground movement
+            rb.AddForce(moveDir.normalized * moveSpeed * 10f * airMultiplier, ForceMode.Force);
+
+            // Optional: gentle air braking when no input, so you don't
+            // slide forever after releasing keys mid-jump
+            if (moveInput == Vector2.zero)
+            {
+                Vector3 airBrake = -flatVel * airMultiplier * 0.5f;
+                rb.AddForce(airBrake, ForceMode.Force);
+            }
         }
     }
 

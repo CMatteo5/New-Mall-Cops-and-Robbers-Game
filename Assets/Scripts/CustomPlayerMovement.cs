@@ -55,9 +55,16 @@ public class CustomPlayerMovement : MonoBehaviour
         grounded = Physics.Raycast(transform.position, Vector3.down,
                                    playerHeight * 0.5f + 0.2f, groundLayer);
 
-        //Debug.Log($"isKinematic: {rb.isKinematic}, grounded: {grounded}, position Y: {transform.position.y}");
-
-        rb.linearDamping = grounded ? groundDrag : 0f;
+        // Full stop when no input and grounded
+        if (moveInput == Vector2.zero && grounded)
+        {
+            rb.linearVelocity = new Vector3(0f, rb.linearVelocity.y, 0f);
+            rb.linearDamping = 0f;
+        }
+        else
+        {
+            rb.linearDamping = grounded ? groundDrag : 0f;
+        }
 
         if (jumpInput && readyToJump && grounded)
         {

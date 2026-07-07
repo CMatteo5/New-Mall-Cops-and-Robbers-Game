@@ -6,7 +6,7 @@ public class CustomPlayerMovement : MonoBehaviour
     [Header("Movement")]
     [SerializeField] private float moveSpeed = 7f;
     [SerializeField] private float groundDrag = 8f;
-    [SerializeField] private float jumpForce = 6f;
+    [SerializeField] private float jumpForce = 10f;
     [SerializeField] private float jumpCooldown = 0.25f;
     [SerializeField] private float airMultiplier = 0.4f;
 

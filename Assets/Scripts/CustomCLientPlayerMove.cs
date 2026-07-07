@@ -40,7 +40,7 @@ public class CustomCLientPlayerMove : NetworkBehaviour
     private IEnumerator SetupAfterSpawn()
     {
         yield return null;
-        Debug.Log($"SetupAfterSpawn fired - IsOwner: {IsOwner}, IsHost: {IsHost}");
+        //Debug.Log($"SetupAfterSpawn fired - IsOwner: {IsOwner}, IsHost: {IsHost}");
 
         if (IsOwner)
         {

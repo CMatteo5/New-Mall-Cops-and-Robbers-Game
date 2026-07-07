@@ -27,7 +27,11 @@ public class CustomPlayerMovement : MonoBehaviour
     private Vector2 moveInput;
     private bool jumpInput;
 
-    public void OnMove(InputValue value) => moveInput = value.Get<Vector2>();
+    public void OnMove(InputValue value)
+    {
+        moveInput = value.Get<Vector2>();
+        //Debug.Log($"OnMove received: {moveInput}");
+    }
     public void OnJump(InputValue value)
     {
         if (value.isPressed)
@@ -40,7 +44,7 @@ public class CustomPlayerMovement : MonoBehaviour
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
-        Debug.Log($"CustomPlayerMovement Start - Rigidbody found: {rb != null}, isKinematic: {rb.isKinematic}");
+        //Debug.Log($"CustomPlayerMovement Start - IsEnabled: {enabled}, isKinematic: {rb.isKinematic}");
         rb.freezeRotation = true;
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
@@ -85,6 +89,7 @@ public class CustomPlayerMovement : MonoBehaviour
             rb.AddForce(moveDir.normalized * moveSpeed * forceMult, ForceMode.Force);
         }
     }
+
 
     private void SpeedControl()
     {

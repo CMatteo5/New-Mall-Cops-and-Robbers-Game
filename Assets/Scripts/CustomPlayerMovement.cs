@@ -140,8 +140,16 @@ public class CustomPlayerMovement : NetworkBehaviour
     /// yaw direction as the camera/orientation transform, so the character
     /// visually turns to look where you're aiming.
     /// </summary>
+    private float lastOrientationLog;
+
     private void RotateBodyToCamera()
     {
+        if (Time.time - lastOrientationLog > 0.5f)
+        {
+            lastOrientationLog = Time.time;
+            Debug.Log($"[CustomPlayerMovement] orientation.eulerAngles.y = {orientation.eulerAngles.y:F1} | rb.rotation.y = {rb.rotation.eulerAngles.y:F1}");
+        }
+
         Quaternion targetRotation = Quaternion.Euler(0f, orientation.eulerAngles.y, 0f);
         rb.MoveRotation(Quaternion.Slerp(rb.rotation, targetRotation, bodyRotationSpeed * Time.fixedDeltaTime));
     }

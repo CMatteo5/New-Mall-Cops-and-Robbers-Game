@@ -6,6 +6,12 @@ public class CameraRegistry : MonoBehaviour
     public static CinemachineCamera ThirdPersonCamera;
     public static CinemachineCamera FirstPersonCamera;
 
+    // The LOCAL player's OrientationSync, registered explicitly at spawn time.
+    // We can't use FindFirstObjectByType<OrientationSync>() here since that's per-player -
+    // with more than one player connected it can grab the WRONG player's copy, which is
+    // exactly what caused first-person look/rotation to freeze once a second player joined.
+    public static OrientationSync LocalOrientationSync;
+
     [SerializeField] private CinemachineCamera m_ThirdPersonCamera;
     [SerializeField] private CinemachineCamera m_FirstPersonCamera;
     [SerializeField] private CinemachineBrain m_Brain;
@@ -34,7 +40,7 @@ public class CameraRegistry : MonoBehaviour
         if (ThirdPersonCamera != null) ThirdPersonCamera.Priority = 0;
 
         var tpController = FindFirstObjectByType<ThirdPersonCameraController>();
-        var sync = FindFirstObjectByType<OrientationSync>();
+        var sync = LocalOrientationSync;
 
         // Carry yaw from first person PanTilt into third person controller
         if (tpController != null && FirstPersonCamera != null)
@@ -58,7 +64,7 @@ public class CameraRegistry : MonoBehaviour
         if (ThirdPersonCamera != null) ThirdPersonCamera.Priority = 0;
 
         var tpController = FindFirstObjectByType<ThirdPersonCameraController>();
-        var sync = FindFirstObjectByType<OrientationSync>();
+        var sync = LocalOrientationSync;
 
         // Carry yaw from third person controller into first person PanTilt
         if (tpController != null && FirstPersonCamera != null)

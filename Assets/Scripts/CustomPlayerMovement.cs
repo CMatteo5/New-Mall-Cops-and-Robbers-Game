@@ -7,8 +7,13 @@ public class CustomPlayerMovement : NetworkBehaviour
     [Header("Movement")]
     [SerializeField] private float moveSpeed = 7f;
     [SerializeField] private float groundDrag = 8f;
+    [Header("Jump")]
     [SerializeField] private float jumpForce = 10f;
     [SerializeField] private float jumpCooldown = 0.25f;
+    [Tooltip("Extra gravity applied only while falling (not while rising). Higher = snappier, less floaty fall. 1 = normal gravity, no change.")]
+    [SerializeField] private float fallMultiplier = 2.5f;
+    [Tooltip("Extra gravity applied only while rising (velocity.y > 0). Higher = reaches peak height faster, less hang time on the way up. Note: this also reduces peak jump height, since velocity decelerates faster - raise jumpForce a bit to compensate if needed. 1 = normal gravity, no change.")]
+    [SerializeField] private float riseMultiplier = 1.5f;
     [SerializeField] private float airMultiplier = 0.4f;
 
     [Header("Ground Check")]
@@ -103,6 +108,36 @@ public class CustomPlayerMovement : NetworkBehaviour
         StepClimb();
         MovePlayer();
         RotateBodyToCamera();
+        ApplyFallMultiplier();
+        ApplyRiseMultiplier();
+    }
+
+    /// <summary>
+    /// Adds extra downward acceleration while rising (velocity.y is positive),
+    /// so the ascent decelerates faster and hits peak height sooner instead of
+    /// drifting upward slowly. This also slightly reduces peak height as a side
+    /// effect - compensate with a higher jumpForce if you want the same height
+    /// but a quicker rise.
+    /// </summary>
+    private void ApplyRiseMultiplier()
+    {
+        if (rb.linearVelocity.y > 0f)
+        {
+            rb.linearVelocity += Vector3.up * Physics.gravity.y * (riseMultiplier - 1f) * Time.fixedDeltaTime;
+        }
+    }
+
+    /// <summary>
+    /// Adds extra downward acceleration while falling (velocity.y is negative),
+    /// so the rise still feels like a normal jump but the descent is snappier
+    /// instead of floating back down at default gravity speed.
+    /// </summary>
+    private void ApplyFallMultiplier()
+    {
+        if (rb.linearVelocity.y < 0f)
+        {
+            rb.linearVelocity += Vector3.up * Physics.gravity.y * (fallMultiplier - 1f) * Time.fixedDeltaTime;
+        }
     }
 
     private void MovePlayer()
@@ -140,16 +175,8 @@ public class CustomPlayerMovement : NetworkBehaviour
     /// yaw direction as the camera/orientation transform, so the character
     /// visually turns to look where you're aiming.
     /// </summary>
-    private float lastOrientationLog;
-
     private void RotateBodyToCamera()
     {
-        if (Time.time - lastOrientationLog > 0.5f)
-        {
-            lastOrientationLog = Time.time;
-            Debug.Log($"[CustomPlayerMovement] orientation.eulerAngles.y = {orientation.eulerAngles.y:F1} | rb.rotation.y = {rb.rotation.eulerAngles.y:F1}");
-        }
-
         Quaternion targetRotation = Quaternion.Euler(0f, orientation.eulerAngles.y, 0f);
         rb.MoveRotation(Quaternion.Slerp(rb.rotation, targetRotation, bodyRotationSpeed * Time.fixedDeltaTime));
     }

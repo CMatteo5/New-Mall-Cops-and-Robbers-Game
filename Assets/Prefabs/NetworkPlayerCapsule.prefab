@@ -31,6 +31,50 @@ Transform:
   m_Children: []
   m_Father: {fileID: 7443003641866262815}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &6535981809695179607
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6812052804713999728}
+  - component: {fileID: 5776737438695238290}
+  m_Layer: 0
+  m_Name: HoldPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6812052804713999728
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6535981809695179607}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0.805, y: 0.293, z: 1.65}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7443003641866262815}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5776737438695238290
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6535981809695179607}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe2788a5af18cc1438ba8af3d5755481, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoldPointMarker
 --- !u!1 &7191155076241903267
 GameObject:
   m_ObjectHideFlags: 0
@@ -83,6 +127,8 @@ GameObject:
   - component: {fileID: 2342561206989973296}
   - component: {fileID: -424178993689442079}
   - component: {fileID: -2759980844697040142}
+  - component: {fileID: 9131306009364688901}
+  - component: {fileID: 7324287094224651687}
   m_Layer: 0
   m_Name: NetworkPlayerCapsule
   m_TagString: Player
@@ -105,6 +151,7 @@ Transform:
   m_Children:
   - {fileID: 6938973557407456018}
   - {fileID: 536871014556337056}
+  - {fileID: 6812052804713999728}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &9081868372934197427
@@ -283,6 +330,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 98809addb7fdb5049b83a92c23c090d8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CustomPlayerMovement
+  ShowTopMostFoldoutHeaderGroup: 1
   moveSpeed: 7
   groundDrag: 5
   jumpForce: 5
@@ -295,6 +343,7 @@ MonoBehaviour:
   stepHeight: 0.4
   stepSmooth: 0.1
   orientation: {fileID: 6938973557407456018}
+  bodyRotationSpeed: 12
 --- !u!114 &3921030970369291922
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -400,3 +449,42 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 44d275941da2b074dab4770bd6853262, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraToggle
+--- !u!114 &9131306009364688901
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8261117547274716967}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 28a51539ad9f67249a7c3d178fba516f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerPickupController
+  ShowTopMostFoldoutHeaderGroup: 1
+  playerCamera: {fileID: 0}
+  holdPoint: {fileID: 6812052804713999728}
+  promptText: {fileID: 0}
+  promptPanel: {fileID: 0}
+  pickupPromptFormat: Press E to pick up {0}
+  dropPrompt: Press E to drop
+  pickupRange: 3
+  dropForwardOffset: 0.5
+  pickupLayerMask:
+    serializedVersion: 2
+    m_Bits: 64
+  bodyRayHeight: 1.5
+--- !u!114 &7324287094224651687
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8261117547274716967}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f03562945f0e5844db305c9c17df6f7a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerWallet
+  ShowTopMostFoldoutHeaderGroup: 1
+  moneyFormat: 'Money: ${0}'

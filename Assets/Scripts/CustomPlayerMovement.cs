@@ -1,7 +1,8 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using Unity.Netcode;
 
-public class CustomPlayerMovement : MonoBehaviour
+public class CustomPlayerMovement : NetworkBehaviour
 {
     [Header("Movement")]
     [SerializeField] private float moveSpeed = 7f;
@@ -20,6 +21,10 @@ public class CustomPlayerMovement : MonoBehaviour
 
     [Header("References")]
     [SerializeField] private Transform orientation;
+
+    [Header("Body Rotation")]
+    [Tooltip("How quickly the player body turns to face the camera's direction. Higher = snappier.")]
+    [SerializeField] private float bodyRotationSpeed = 12f;
 
     private Rigidbody rb;
     private bool grounded;
@@ -44,8 +49,23 @@ public class CustomPlayerMovement : MonoBehaviour
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
-        //Debug.Log($"CustomPlayerMovement Start - IsEnabled: {enabled}, isKinematic: {rb.isKinematic}");
         rb.freezeRotation = true;
+    }
+
+    public override void OnNetworkSpawn()
+    {
+        if (!IsOwner)
+        {
+            // This is a copy of ANOTHER player's object being observed on our machine -
+            // it must never process input or run movement logic locally, or its PlayerInput
+            // component can cross-wire with our own local keyboard/device input.
+            PlayerInput playerInput = GetComponent<PlayerInput>();
+            if (playerInput != null) playerInput.enabled = false;
+
+            enabled = false;
+            return;
+        }
+
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
@@ -82,6 +102,7 @@ public class CustomPlayerMovement : MonoBehaviour
         //Debug.Log("FixedUpdate firing");
         StepClimb();
         MovePlayer();
+        RotateBodyToCamera();
     }
 
     private void MovePlayer()
@@ -114,6 +135,16 @@ public class CustomPlayerMovement : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Rotates the player body (and therefore the model) to face the same
+    /// yaw direction as the camera/orientation transform, so the character
+    /// visually turns to look where you're aiming.
+    /// </summary>
+    private void RotateBodyToCamera()
+    {
+        Quaternion targetRotation = Quaternion.Euler(0f, orientation.eulerAngles.y, 0f);
+        rb.MoveRotation(Quaternion.Slerp(rb.rotation, targetRotation, bodyRotationSpeed * Time.fixedDeltaTime));
+    }
 
     private void SpeedControl()
     {

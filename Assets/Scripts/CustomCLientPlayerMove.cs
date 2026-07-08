@@ -66,6 +66,12 @@ public class CustomCLientPlayerMove : NetworkBehaviour
 
     private void AssignCameras()
     {
+        // Register OUR OrientationSync as the local one, so CameraRegistry never has to
+        // guess which player's copy to use - critical once multiple players are connected,
+        // since FindFirstObjectByType<OrientationSync>() could otherwise grab the wrong
+        // player's instance and freeze our own first-person look/rotation entirely.
+        CameraRegistry.LocalOrientationSync = m_OrientationSync;
+
         // Third person - use our manual controller instead of Cinemachine procedural
         var tpController = FindFirstObjectByType<ThirdPersonCameraController>();
         if (tpController != null)

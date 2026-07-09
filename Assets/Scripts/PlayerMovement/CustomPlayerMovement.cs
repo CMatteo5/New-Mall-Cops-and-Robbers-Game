@@ -1,18 +1,18 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using Unity.Netcode;
+using Unity.Cinemachine;
 
 public class CustomPlayerMovement : NetworkBehaviour
 {
     [Header("Movement")]
     [SerializeField] private float moveSpeed = 7f;
     [SerializeField] private float groundDrag = 8f;
+
     [Header("Jump")]
     [SerializeField] private float jumpForce = 10f;
     [SerializeField] private float jumpCooldown = 0.25f;
-    [Tooltip("Extra gravity applied only while falling (not while rising). Higher = snappier, less floaty fall. 1 = normal gravity, no change.")]
     [SerializeField] private float fallMultiplier = 2.5f;
-    [Tooltip("Extra gravity applied only while rising (velocity.y > 0). Higher = reaches peak height faster, less hang time on the way up. Note: this also reduces peak jump height, since velocity decelerates faster - raise jumpForce a bit to compensate if needed. 1 = normal gravity, no change.")]
     [SerializeField] private float riseMultiplier = 1.5f;
     [SerializeField] private float airMultiplier = 0.4f;
 
@@ -28,48 +28,98 @@ public class CustomPlayerMovement : NetworkBehaviour
     [SerializeField] private Transform orientation;
 
     [Header("Body Rotation")]
-    [Tooltip("How quickly the player body turns to face the camera's direction. Higher = snappier.")]
     [SerializeField] private float bodyRotationSpeed = 12f;
+
+    [Header("Shop")]
+    [SerializeField] private GameObject buyTerminal;
 
     private Rigidbody rb;
     private bool grounded;
     private bool readyToJump = true;
     private Vector2 moveInput;
     private bool jumpInput;
+    private bool shopOpen = false;
+    private PlayerCanBuy playerCanBuy;
 
-    public void OnMove(InputValue value)
-    {
-        moveInput = value.Get<Vector2>();
-        //Debug.Log($"OnMove received: {moveInput}");
-    }
+    public void OnMove(InputValue value) => moveInput = value.Get<Vector2>();
+
     public void OnJump(InputValue value)
     {
-        if (value.isPressed)
-        {
-            if (grounded && readyToJump)
-                jumpInput = true;
-        }
+        if (value.isPressed && grounded && readyToJump)
+            jumpInput = true;
     }
 
-    private void Start()
+    public void OnInteract(InputValue value)
     {
-        rb = GetComponent<Rigidbody>();
-        rb.freezeRotation = true;
+        if (!value.isPressed) return;
+        if (playerCanBuy == null || !playerCanBuy.playerCanBuy) return;
+
+        if (!shopOpen)
+            OpenShop();
+        else
+            CloseShop();
     }
 
+    public void OpenShop()
+    {
+        shopOpen = true;
+        moveInput = Vector2.zero;
+        GameState.SetShopOpen(true);
+
+        // Disable first person camera input
+        if (CameraRegistry.FirstPersonCamera != null)
+        {
+            var controller = CameraRegistry.FirstPersonCamera
+                             .GetComponent<CinemachineInputAxisController>();
+            if (controller != null) controller.enabled = false;
+        }
+
+        if (buyTerminal != null)
+        {
+            buyTerminal.SetActive(true);
+            ShopCloseButton closeBtn = buyTerminal.GetComponentInChildren<ShopCloseButton>();
+            if (closeBtn != null) closeBtn.Initialize(this);
+        }
+
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+    }
+
+    public void CloseShop()
+    {
+        shopOpen = false;
+        GameState.SetShopOpen(false);
+
+        // Re-enable first person camera input only if in first person
+        if (CameraRegistry.FirstPersonCamera != null)
+        {
+            var controller = CameraRegistry.FirstPersonCamera
+                             .GetComponent<CinemachineInputAxisController>();
+            if (controller != null) controller.enabled = true;
+        }
+
+        if (buyTerminal != null) buyTerminal.SetActive(false);
+
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+    }
     public override void OnNetworkSpawn()
     {
+        rb = GetComponent<Rigidbody>();
+
         if (!IsOwner)
         {
-            // This is a copy of ANOTHER player's object being observed on our machine -
-            // it must never process input or run movement logic locally, or its PlayerInput
-            // component can cross-wire with our own local keyboard/device input.
             PlayerInput playerInput = GetComponent<PlayerInput>();
             if (playerInput != null) playerInput.enabled = false;
-
             enabled = false;
             return;
         }
+
+        // Owner only setup
+        rb.freezeRotation = true;
+        playerCanBuy = GetComponent<PlayerCanBuy>();
+
+        if (buyTerminal != null) buyTerminal.SetActive(false);
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
@@ -77,10 +127,15 @@ public class CustomPlayerMovement : NetworkBehaviour
 
     private void Update()
     {
+        if (shopOpen)
+        {
+            rb.linearVelocity = new Vector3(0f, rb.linearVelocity.y, 0f);
+            return;
+        }
+
         grounded = Physics.Raycast(transform.position, Vector3.down,
                                    playerHeight * 0.5f + 0.2f, groundLayer);
 
-        // Full stop when no input and grounded
         if (moveInput == Vector2.zero && grounded)
         {
             rb.linearVelocity = new Vector3(0f, rb.linearVelocity.y, 0f);
@@ -104,7 +159,8 @@ public class CustomPlayerMovement : NetworkBehaviour
 
     private void FixedUpdate()
     {
-        //Debug.Log("FixedUpdate firing");
+        if (shopOpen) return;
+
         StepClimb();
         MovePlayer();
         RotateBodyToCamera();
@@ -112,32 +168,16 @@ public class CustomPlayerMovement : NetworkBehaviour
         ApplyRiseMultiplier();
     }
 
-    /// <summary>
-    /// Adds extra downward acceleration while rising (velocity.y is positive),
-    /// so the ascent decelerates faster and hits peak height sooner instead of
-    /// drifting upward slowly. This also slightly reduces peak height as a side
-    /// effect - compensate with a higher jumpForce if you want the same height
-    /// but a quicker rise.
-    /// </summary>
     private void ApplyRiseMultiplier()
     {
         if (rb.linearVelocity.y > 0f)
-        {
             rb.linearVelocity += Vector3.up * Physics.gravity.y * (riseMultiplier - 1f) * Time.fixedDeltaTime;
-        }
     }
 
-    /// <summary>
-    /// Adds extra downward acceleration while falling (velocity.y is negative),
-    /// so the rise still feels like a normal jump but the descent is snappier
-    /// instead of floating back down at default gravity speed.
-    /// </summary>
     private void ApplyFallMultiplier()
     {
         if (rb.linearVelocity.y < 0f)
-        {
             rb.linearVelocity += Vector3.up * Physics.gravity.y * (fallMultiplier - 1f) * Time.fixedDeltaTime;
-        }
     }
 
     private void MovePlayer()
@@ -150,18 +190,12 @@ public class CustomPlayerMovement : NetworkBehaviour
         if (grounded)
         {
             if (flatVel.magnitude < moveSpeed)
-            {
                 rb.AddForce(moveDir.normalized * moveSpeed * 10f, ForceMode.Force);
-            }
         }
         else
         {
-            // Air control: always allow steering, even above moveSpeed,
-            // but scale it down so it doesn't feel like ground movement
             rb.AddForce(moveDir.normalized * moveSpeed * 10f * airMultiplier, ForceMode.Force);
 
-            // Optional: gentle air braking when no input, so you don't
-            // slide forever after releasing keys mid-jump
             if (moveInput == Vector2.zero)
             {
                 Vector3 airBrake = -flatVel * airMultiplier * 0.5f;
@@ -170,11 +204,6 @@ public class CustomPlayerMovement : NetworkBehaviour
         }
     }
 
-    /// <summary>
-    /// Rotates the player body (and therefore the model) to face the same
-    /// yaw direction as the camera/orientation transform, so the character
-    /// visually turns to look where you're aiming.
-    /// </summary>
     private void RotateBodyToCamera()
     {
         Quaternion targetRotation = Quaternion.Euler(0f, orientation.eulerAngles.y, 0f);
@@ -187,8 +216,7 @@ public class CustomPlayerMovement : NetworkBehaviour
         if (flatVel.magnitude > moveSpeed)
         {
             Vector3 limitedVel = flatVel.normalized * moveSpeed;
-            rb.linearVelocity = new Vector3(limitedVel.x, rb.linearVelocity.y,
-                                            limitedVel.z);
+            rb.linearVelocity = new Vector3(limitedVel.x, rb.linearVelocity.y, limitedVel.z);
         }
     }
 

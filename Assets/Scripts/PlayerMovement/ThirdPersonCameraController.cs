@@ -24,8 +24,8 @@ public class ThirdPersonCameraController : MonoBehaviour
     private void LateUpdate()
     {
         if (target == null) return;
+        if (GameState.ShopOpen) return; // pause camera when shop is open
 
-        // Remove Time.deltaTime - mouse delta is already per-frame
         Vector2 mouseDelta = Mouse.current.delta.ReadValue();
 
         yaw += mouseDelta.x * sensX;

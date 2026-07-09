@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cfb9c6a02af62574d9382c2583e84a20, type: 3}
+  m_Name: GreenCube
+  m_EditorClassIdentifier: Assembly-CSharp::ItemData
+  itemName: GreenCube
+  cost: 10
+  icon: {fileID: 0}
+  prefab: {fileID: 1405881921023858047, guid: 2261cfb4bd442a3499ef32ad64d6a80a, type: 3}
+  description: 

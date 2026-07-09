@@ -36,13 +36,12 @@ public class OrientationSync : MonoBehaviour
     private void LateUpdate()
     {
         if (orientation == null) return;
+        if (GameState.ShopOpen) return; // pause camera when shop is open
 
         if (isFirstPerson && panTilt != null)
         {
-            // First person only: read from Cinemachine PanTilt
             yRotation = panTilt.PanAxis.Value;
             orientation.rotation = Quaternion.Euler(0f, yRotation, 0f);
         }
-        // Third person: do nothing here - ThirdPersonCameraController calls SetYaw directly
     }
 }

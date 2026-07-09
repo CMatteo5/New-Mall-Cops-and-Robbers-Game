@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &2116912912978461033
+--- !u!1 &1267033787476391578
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,66 +8,45 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 4900719246295976004}
-  - component: {fileID: 6942024314114280639}
-  - component: {fileID: 7938655879295252684}
-  - component: {fileID: 173828151314923945}
+  - component: {fileID: 6127599788485546239}
+  - component: {fileID: 8402328209224117906}
+  - component: {fileID: 4377556504022985853}
+  - component: {fileID: 6506934788923952082}
   m_Layer: 0
-  m_Name: Selling Zone
+  m_Name: GameManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &4900719246295976004
+--- !u!4 &6127599788485546239
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2116912912978461033}
+  m_GameObject: {fileID: 1267033787476391578}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 2.39, y: 0.81, z: 33.12}
-  m_LocalScale: {x: 10, y: 1, z: 10}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.95896, y: 0, z: 35.39443}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &6942024314114280639
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2116912912978461033}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 1
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &7938655879295252684
+--- !u!114 &8402328209224117906
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2116912912978461033}
+  m_GameObject: {fileID: 1267033787476391578}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 2373861571
+  GlobalObjectIdHash: 3223985305
   InScenePlacedSourceGlobalObjectIdHash: 0
   DeferredDespawnTick: 0
   Ownership: 1
@@ -75,23 +54,40 @@ MonoBehaviour:
   SynchronizeTransform: 1
   <InScenePlaced>k__BackingField: 0
   ActiveSceneSynchronization: 0
-  SceneMigrationSynchronization: 1
+  SceneMigrationSynchronization: 0
   SpawnWithObservers: 1
   DontDestroyWithOwner: 0
   AutoObjectParentSync: 1
   SyncOwnerTransformWhenParented: 1
   AllowOwnerToParent: 0
---- !u!114 &173828151314923945
+--- !u!114 &4377556504022985853
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2116912912978461033}
+  m_GameObject: {fileID: 1267033787476391578}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: eed28f3d5a4cd1b4facb787eba3f7ae5, type: 3}
+  m_Script: {fileID: 11500000, guid: f03562945f0e5844db305c9c17df6f7a, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SellZone
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerWallet
   ShowTopMostFoldoutHeaderGroup: 1
-  requiredItemName: 
+  moneyFormat: 'Money: ${0}'
+--- !u!114 &6506934788923952082
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1267033787476391578}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8519581288e880348a6e4fd1a3674351, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameTimer
+  ShowTopMostFoldoutHeaderGroup: 1
+  startingTime: 500
+  timerTextObjectName: TimerText
+  winLosePanelObjectName: WinLosePanel
+  resultTextObjectName: ResultText

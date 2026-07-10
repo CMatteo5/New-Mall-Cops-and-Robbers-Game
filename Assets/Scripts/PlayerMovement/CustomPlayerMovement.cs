@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
 using Unity.Netcode;
 using Unity.Cinemachine;
 
@@ -30,6 +31,19 @@ public class CustomPlayerMovement : NetworkBehaviour
     [Header("Body Rotation")]
     [SerializeField] private float bodyRotationSpeed = 12f;
 
+    [Header("Sprint / Stamina")]
+    [Tooltip("Speed multiplier while sprinting (e.g. 1.6 = 60% faster).")]
+    [SerializeField] private float sprintSpeedMultiplier = 1.6f;
+    [SerializeField] private float maxStamina = 100f;
+    [Tooltip("Stamina drained per second while sprinting.")]
+    [SerializeField] private float staminaDrainRate = 25f;
+    [Tooltip("Stamina regenerated per second while not sprinting.")]
+    [SerializeField] private float staminaRegenRate = 15f;
+    [Tooltip("Seconds to wait after you stop sprinting before regen begins.")]
+    [SerializeField] private float staminaRegenDelay = 1f;
+    [Tooltip("Name of the UI Slider in the scene used as the on-screen stamina bar. Found automatically at spawn, like InteractPrompt/MoneyText.")]
+    [SerializeField] private string staminaBarObjectName = "StaminaBar";
+
     [Header("Shop")]
     [SerializeField] private GameObject buyTerminal;
 
@@ -40,6 +54,11 @@ public class CustomPlayerMovement : NetworkBehaviour
     private bool jumpInput;
     private bool shopOpen = false;
     private PlayerCanBuy playerCanBuy;
+
+    private float currentStamina;
+    private float regenDelayTimer;
+    private bool isSprinting;
+    private Slider staminaBarSlider;
 
     public void OnMove(InputValue value) => moveInput = value.Get<Vector2>();
 
@@ -123,6 +142,12 @@ public class CustomPlayerMovement : NetworkBehaviour
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+
+        currentStamina = maxStamina;
+
+        GameObject staminaObj = GameObject.Find(staminaBarObjectName);
+        if (staminaObj != null) staminaBarSlider = staminaObj.GetComponent<Slider>();
+        UpdateStaminaUI();
     }
 
     private void Update()
@@ -154,7 +179,44 @@ public class CustomPlayerMovement : NetworkBehaviour
             Invoke(nameof(ResetJump), jumpCooldown);
         }
 
+        UpdateSprintAndStamina();
         SpeedControl();
+    }
+
+    private void UpdateSprintAndStamina()
+    {
+        bool sprintKeyHeld = Keyboard.current != null && Keyboard.current.leftShiftKey.isPressed;
+        bool wantsToSprint = sprintKeyHeld && moveInput != Vector2.zero && currentStamina > 0f;
+
+        if (wantsToSprint)
+        {
+            isSprinting = true;
+            currentStamina = Mathf.Max(0f, currentStamina - staminaDrainRate * Time.deltaTime);
+            regenDelayTimer = staminaRegenDelay;
+        }
+        else
+        {
+            isSprinting = false;
+
+            if (regenDelayTimer > 0f)
+            {
+                regenDelayTimer -= Time.deltaTime;
+            }
+            else
+            {
+                currentStamina = Mathf.Min(maxStamina, currentStamina + staminaRegenRate * Time.deltaTime);
+            }
+        }
+
+        UpdateStaminaUI();
+    }
+
+    private void UpdateStaminaUI()
+    {
+        if (staminaBarSlider != null)
+        {
+            staminaBarSlider.value = currentStamina / maxStamina;
+        }
     }
 
     private void FixedUpdate()
@@ -185,16 +247,17 @@ public class CustomPlayerMovement : NetworkBehaviour
         Vector3 moveDir = orientation.forward * moveInput.y +
                           orientation.right * moveInput.x;
 
+        float currentMoveSpeed = moveSpeed * (isSprinting ? sprintSpeedMultiplier : 1f);
         Vector3 flatVel = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
 
         if (grounded)
         {
-            if (flatVel.magnitude < moveSpeed)
-                rb.AddForce(moveDir.normalized * moveSpeed * 10f, ForceMode.Force);
+            if (flatVel.magnitude < currentMoveSpeed)
+                rb.AddForce(moveDir.normalized * currentMoveSpeed * 10f, ForceMode.Force);
         }
         else
         {
-            rb.AddForce(moveDir.normalized * moveSpeed * 10f * airMultiplier, ForceMode.Force);
+            rb.AddForce(moveDir.normalized * currentMoveSpeed * 10f * airMultiplier, ForceMode.Force);
 
             if (moveInput == Vector2.zero)
             {
@@ -212,10 +275,11 @@ public class CustomPlayerMovement : NetworkBehaviour
 
     private void SpeedControl()
     {
+        float currentMoveSpeed = moveSpeed * (isSprinting ? sprintSpeedMultiplier : 1f);
         Vector3 flatVel = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
-        if (flatVel.magnitude > moveSpeed)
+        if (flatVel.magnitude > currentMoveSpeed)
         {
-            Vector3 limitedVel = flatVel.normalized * moveSpeed;
+            Vector3 limitedVel = flatVel.normalized * currentMoveSpeed;
             rb.linearVelocity = new Vector3(limitedVel.x, rb.linearVelocity.y, limitedVel.z);
         }
     }

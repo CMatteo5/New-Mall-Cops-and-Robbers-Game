@@ -51,6 +51,18 @@ public class PlayerPickupController : NetworkBehaviour
     {
         // Update() only ever runs on the local owning player because OnNetworkSpawn
         // disables this component entirely for everyone else.
+
+        if (GameTimer.CurrentPhase != GamePhase.InProgress)
+        {
+            // No raycasting or prompts on the start/win/lose screens.
+            if (promptText != null)
+            {
+                if (promptPanel != null) promptPanel.SetActive(false);
+                else promptText.gameObject.SetActive(false);
+            }
+            return;
+        }
+
         UpdateLookTarget();
         UpdatePrompt();
 

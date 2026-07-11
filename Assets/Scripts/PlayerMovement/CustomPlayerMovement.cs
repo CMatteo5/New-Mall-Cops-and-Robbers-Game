@@ -140,8 +140,9 @@ public class CustomPlayerMovement : NetworkBehaviour
 
         if (buyTerminal != null) buyTerminal.SetActive(false);
 
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        // Cursor lock is no longer set here - GameTimer now controls cursor state
+        // based on the current game phase (unlocked during start/end screens, locked
+        // once gameplay is InProgress), so it doesn't fight with the start screen.
 
         currentStamina = maxStamina;
 
@@ -153,6 +154,12 @@ public class CustomPlayerMovement : NetworkBehaviour
     private void Update()
     {
         if (shopOpen)
+        {
+            rb.linearVelocity = new Vector3(0f, rb.linearVelocity.y, 0f);
+            return;
+        }
+
+        if (GameTimer.CurrentPhase != GamePhase.InProgress)
         {
             rb.linearVelocity = new Vector3(0f, rb.linearVelocity.y, 0f);
             return;
@@ -221,7 +228,7 @@ public class CustomPlayerMovement : NetworkBehaviour
 
     private void FixedUpdate()
     {
-        if (shopOpen) return;
+        if (shopOpen || GameTimer.CurrentPhase != GamePhase.InProgress) return;
 
         StepClimb();
         MovePlayer();

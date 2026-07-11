@@ -107,6 +107,9 @@ public class CustomPlayerMovement : NetworkBehaviour
     {
         rb = GetComponent<Rigidbody>();
 
+        // Hide terminal for ALL instances immediately on spawn
+        if (buyTerminal != null) buyTerminal.SetActive(false);
+
         if (!IsOwner)
         {
             PlayerInput playerInput = GetComponent<PlayerInput>();
@@ -115,12 +118,8 @@ public class CustomPlayerMovement : NetworkBehaviour
             return;
         }
 
-        // Owner only setup
         rb.freezeRotation = true;
         playerCanBuy = GetComponent<PlayerCanBuy>();
-
-        if (buyTerminal != null) buyTerminal.SetActive(false);
-
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }

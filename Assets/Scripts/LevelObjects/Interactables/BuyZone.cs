@@ -13,10 +13,12 @@ public class BuyZone : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
+        //Debug.Log($"BuyZone hit by: {collision.gameObject.name}");
         if (collision.gameObject.CompareTag("Player"))
         {
-            collision.gameObject.GetComponent<PlayerCanBuy>().flipPlayerCanBuy();
-            collision.gameObject.GetComponent<PlayerCanBuy>().lastLocation = itemSpawnLocation;
+            PlayerCanBuy pcb = collision.gameObject.GetComponent<PlayerCanBuy>();
+            pcb.lastLocation = itemSpawnLocation;
+            pcb.flipPlayerCanBuy();
         }
     }
 

@@ -78,6 +78,16 @@ public class PlayerPickupController : NetworkBehaviour
             PickUp(lookedAtItem);
         }
     }
+    /// <summary>
+    /// Returns a live camera, re-acquiring Camera.main if our cached reference
+    /// was destroyed (e.g. by a scene load).
+    /// </summary>
+    private bool TryGetCamera(out Camera cam)
+    {
+        if (playerCamera == null) playerCamera = Camera.main;
+        cam = playerCamera;
+        return cam != null;
+    }
 
     private void UpdateLookTarget()
     {
@@ -87,7 +97,13 @@ public class PlayerPickupController : NetworkBehaviour
             return;
         }
 
-        Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
+        if (!TryGetCamera(out Camera cam))
+        {
+            lookedAtItem = null;
+            return;
+        }
+
+        Ray ray = new Ray(cam.transform.position, cam.transform.forward);
         if (Physics.Raycast(ray, out RaycastHit hit, maxRaycastDistance, pickupLayerMask))
         {
             Pickupable pickupable = hit.collider.GetComponentInParent<Pickupable>();
@@ -126,7 +142,8 @@ public class PlayerPickupController : NetworkBehaviour
 
     private void DropItem()
     {
-        Vector3 dropPosition = holdPoint.position + playerCamera.transform.forward * dropForwardOffset;
+        Vector3 forward = TryGetCamera(out Camera cam) ? cam.transform.forward : transform.forward;
+        Vector3 dropPosition = holdPoint.position + forward * dropForwardOffset;
         heldItem.RequestDropServerRpc(dropPosition);
         heldItem = null;
     }

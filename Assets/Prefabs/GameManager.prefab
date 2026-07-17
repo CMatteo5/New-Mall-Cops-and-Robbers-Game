@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 8402328209224117906}
   - component: {fileID: 4377556504022985853}
   - component: {fileID: 6506934788923952082}
+  - component: {fileID: -5990350198443539815}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -46,7 +47,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 3223985305
+  GlobalObjectIdHash: 3490591646
   InScenePlacedSourceGlobalObjectIdHash: 0
   DeferredDespawnTick: 0
   Ownership: 1
@@ -74,6 +75,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerWallet
   ShowTopMostFoldoutHeaderGroup: 1
   moneyFormat: 'Money: ${0}'
+  shopText: {fileID: 0}
 --- !u!114 &6506934788923952082
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -89,5 +91,25 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   startingTime: 500
   timerTextObjectName: TimerText
+  startScreenPanelObjectName: StartScreenPanel
+  startGameButtonObjectName: StartGameButton
+  waitingForHostTextObjectName: WaitingForHostText
   winLosePanelObjectName: WinLosePanel
   resultTextObjectName: ResultText
+  restartButtonObjectName: RestartButton
+  waitingForRestartTextObjectName: WaitingForRestartText
+  crosshairObjectName: DefaultCrosshair
+--- !u!114 &-5990350198443539815
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1267033787476391578}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7e3fd20d9fc923a48b1fff07e3fbc781, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::JailManager
+  ShowTopMostFoldoutHeaderGroup: 1
+  jailSpawnPoint: {fileID: 0}

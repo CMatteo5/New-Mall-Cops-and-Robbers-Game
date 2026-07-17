@@ -194,8 +194,28 @@ public class GameTimer : NetworkBehaviour
     {
         if (!IsServer || phase.Value != GamePhase.WaitingToStart) return;
 
+        // Any player who never picked a team is dropped onto the Robbers
+        // when the round begins (mirrors the old LobbyManager.StartGame logic).
+        AssignUnassignedPlayersToRobbers();
+
         timeRemaining.Value = startingTime;
         phase.Value = GamePhase.InProgress;
+    }
+
+    /// <summary>Server-only: everyone still on team None becomes a Robber at round start.</summary>
+    private void AssignUnassignedPlayersToRobbers()
+    {
+        if (!IsServer) return;
+
+        foreach (var obj in NetworkManager.Singleton.SpawnManager.SpawnedObjects.Values)
+        {
+            PlayerTeam pt = obj.GetComponent<PlayerTeam>();
+            if (pt != null && pt.Team.Value == PlayerTeams.None)
+            {
+                pt.Team.Value = PlayerTeams.Robber;
+                if (LobbyManager.Instance != null) LobbyManager.Instance.RegisterRobber();
+            }
+        }
     }
 
     /// <summary>Wired to the Restart button. Host-only, double-checked server-side.</summary>

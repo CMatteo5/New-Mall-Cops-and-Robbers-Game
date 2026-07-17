@@ -1,68 +1,68 @@
-// LobbyManager.cs
 using Unity.Netcode;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
-public class LobbyManager : NetworkBehaviour
+
+public class LobbyManager : MonoBehaviour
 {
     public static LobbyManager Instance;
 
-    public NetworkVariable<int> CopCount = new NetworkVariable<int>(
-        0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
-    public NetworkVariable<int> RobberCount = new NetworkVariable<int>(
-        0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
-    public NetworkVariable<int> PlayerCount = new NetworkVariable<int>(
-        0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+    public int CopCount { get; private set; }
+    public int RobberCount { get; private set; }
+    public int PlayerCount { get; private set; }
 
-    [SerializeField] private string gameSceneName = "DevRoom";
+    //[SerializeField] private string gameSceneName = "DevRoom";
+
+    private bool IsServer => NetworkManager.Singleton != null &&
+                             NetworkManager.Singleton.IsServer;
 
     private void Awake()
     {
         Instance = this;
     }
 
-    public override void OnNetworkSpawn()
+    private void Start()
     {
-        if (!IsServer) return;
-
         NetworkManager.Singleton.OnClientConnectedCallback += OnPlayerConnected;
         NetworkManager.Singleton.OnClientDisconnectCallback += OnPlayerDisconnected;
     }
 
-    public override void OnNetworkDespawn()
+    private void OnDestroy()
     {
-        if (!IsServer) return;
-
-        NetworkManager.Singleton.OnClientConnectedCallback -= OnPlayerConnected;
-        NetworkManager.Singleton.OnClientDisconnectCallback -= OnPlayerDisconnected;
+        if (NetworkManager.Singleton != null)
+        {
+            NetworkManager.Singleton.OnClientConnectedCallback -= OnPlayerConnected;
+            NetworkManager.Singleton.OnClientDisconnectCallback -= OnPlayerDisconnected;
+        }
     }
 
     private void OnPlayerConnected(ulong clientId)
     {
-        PlayerCount.Value++;
+        if (!IsServer) return;
+        PlayerCount++;
     }
 
     private void OnPlayerDisconnected(ulong clientId)
     {
-        PlayerCount.Value--;
+        if (!IsServer) return;
+        PlayerCount--;
+
+        if (NetworkManager.Singleton == null || NetworkManager.Singleton.SpawnManager == null) return;
 
         foreach (var obj in NetworkManager.Singleton.SpawnManager.SpawnedObjects.Values)
         {
-            if (obj.OwnerClientId == clientId)
-            {
-                PlayerTeam pt = obj.GetComponent<PlayerTeam>();
-                if (pt != null)
-                {
-                    if (pt.Team.Value == PlayerTeams.Cop) CopCount.Value--;
-                    else if (pt.Team.Value == PlayerTeams.Robber) RobberCount.Value--;
-                    pt.Team.Value = PlayerTeams.None;
-                }
-            }
+            if (obj == null || obj.OwnerClientId != clientId) continue;
+
+            PlayerTeam pt = obj.GetComponent<PlayerTeam>();
+            if (pt == null) continue;
+
+            if (pt.Team.Value == PlayerTeams.Cop) CopCount--;
+            else if (pt.Team.Value == PlayerTeams.Robber) RobberCount--;
+            pt.Team.Value = PlayerTeams.None;
         }
     }
 
-    public int MaxCops => Mathf.FloorToInt(PlayerCount.Value / 2f);
-    public bool CanJoinCops => CopCount.Value < MaxCops;
+    public int MaxCops => Mathf.FloorToInt(PlayerCount / 2f);
+    public bool CanJoinCops => CopCount < MaxCops;
 
     public bool TryAssignTeam(NetworkObject player, PlayerTeams requestedTeam)
     {
@@ -71,19 +71,19 @@ public class LobbyManager : NetworkBehaviour
         PlayerTeam pt = player.GetComponent<PlayerTeam>();
         if (pt == null) return false;
 
-        if (pt.Team.Value == PlayerTeams.Cop) CopCount.Value--;
-        else if (pt.Team.Value == PlayerTeams.Robber) RobberCount.Value--;
+        if (pt.Team.Value == PlayerTeams.Cop) CopCount--;
+        else if (pt.Team.Value == PlayerTeams.Robber) RobberCount--;
 
         if (requestedTeam == PlayerTeams.Cop && !CanJoinCops)
         {
-            if (pt.Team.Value == PlayerTeams.Cop) CopCount.Value++;
-            else if (pt.Team.Value == PlayerTeams.Robber) RobberCount.Value++;
+            if (pt.Team.Value == PlayerTeams.Cop) CopCount++;
+            else if (pt.Team.Value == PlayerTeams.Robber) RobberCount++;
             return false;
         }
 
         pt.Team.Value = requestedTeam;
-        if (requestedTeam == PlayerTeams.Cop) CopCount.Value++;
-        else if (requestedTeam == PlayerTeams.Robber) RobberCount.Value++;
+        if (requestedTeam == PlayerTeams.Cop) CopCount++;
+        else if (requestedTeam == PlayerTeams.Robber) RobberCount++;
 
         return true;
     }
@@ -95,28 +95,20 @@ public class LobbyManager : NetworkBehaviour
         PlayerTeam pt = player.GetComponent<PlayerTeam>();
         if (pt == null) return;
 
-        if (pt.Team.Value == PlayerTeams.Cop) CopCount.Value--;
-        else if (pt.Team.Value == PlayerTeams.Robber) RobberCount.Value--;
+        if (pt.Team.Value == PlayerTeams.Cop) CopCount--;
+        else if (pt.Team.Value == PlayerTeams.Robber) RobberCount--;
 
         pt.Team.Value = PlayerTeams.None;
     }
 
-    [ServerRpc(RequireOwnership = false)]
-    public void StartGameServerRpc()
+    /// <summary>
+    /// Called by GameTimer when a round starts and an unassigned player is
+    /// dropped onto the Robbers, so the team count stays accurate.
+    /// Server-only.
+    /// </summary>
+    public void RegisterRobber()
     {
         if (!IsServer) return;
-
-        foreach (var obj in NetworkManager.Singleton.SpawnManager.SpawnedObjects.Values)
-        {
-            PlayerTeam pt = obj.GetComponent<PlayerTeam>();
-            if (pt != null && pt.Team.Value == PlayerTeams.None)
-            {
-                pt.Team.Value = PlayerTeams.Robber;
-                RobberCount.Value++;
-            }
-        }
-
-        NetworkManager.Singleton.SceneManager.LoadScene(
-            gameSceneName, LoadSceneMode.Single);
+        RobberCount++;
     }
 }

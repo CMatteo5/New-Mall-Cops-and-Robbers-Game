@@ -9,12 +9,10 @@ public class BatonToggle : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
-        // Run on EVERY client, not just the owner. The baton's visibility is
-        // driven by the networked Team value (readable by everyone), so each
-        // client can independently show/hide this player's baton. Keying off
-        // IsOwner was the bug: non-owners never ran UpdateBaton, so the baton
-        // sat at its prefab default (visible) for all other players.
-        playerTeam = GetComponent<PlayerTeam>();
+        // PlayerTeam lives on the player ROOT, but this component may sit on a
+        // child (the baton object). GetComponentInParent walks up the hierarchy
+        // so it's found regardless of where BatonToggle is attached.
+        playerTeam = GetComponentInParent<PlayerTeam>();
 
         if (playerTeam != null)
             playerTeam.Team.OnValueChanged += OnTeamChanged;
@@ -29,6 +27,11 @@ public class BatonToggle : NetworkBehaviour
     }
 
     private void OnTeamChanged(PlayerTeams oldTeam, PlayerTeams newTeam)
+    {
+        UpdateBaton();
+    }
+
+    private void Update()
     {
         UpdateBaton();
     }

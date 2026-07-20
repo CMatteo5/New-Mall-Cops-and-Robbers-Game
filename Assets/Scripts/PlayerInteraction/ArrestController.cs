@@ -33,7 +33,6 @@ public class ArrestController : NetworkBehaviour
         myTeam = GetComponent<PlayerTeam>();
         pickupController = GetComponent<PlayerPickupController>();
 
-        // Find prompt objects if not assigned
         if (promptText == null)
         {
             GameObject promptObj = GameObject.Find("InteractPrompt");
@@ -133,21 +132,33 @@ public class ArrestController : NetworkBehaviour
         if (targetPickup != null && targetPickup.CurrentItem != null)
             targetPickup.CurrentItem.RequestDropServerRpc(target.transform.position);
 
-        TeleportToJailClientRpc(JailManager.Instance.JailPosition,
-            new ClientRpcParams
-            {
-                Send = new ClientRpcSendParams
+        // The arrested player owns their own transform (ClientNetworkTransform is
+        // client-authoritative), so a server-side position write gets overwritten
+        // by the owner's next sync. Instead, tell ONLY the arrested player's client
+        // to move itself — as the owner, its move is authoritative and replicates.
+        ArrestController targetArrest = target.GetComponent<ArrestController>();
+        if (targetArrest != null)
+        {
+            targetArrest.TeleportSelfClientRpc(JailManager.Instance.JailPosition,
+                new ClientRpcParams
                 {
-                    TargetClientIds = new[] { target.OwnerClientId }
-                }
-            });
+                    Send = new ClientRpcSendParams
+                    {
+                        TargetClientIds = new[] { target.OwnerClientId }
+                    }
+                });
+        }
     }
 
     [ClientRpc]
-    private void TeleportToJailClientRpc(Vector3 jailPosition,
+    private void TeleportSelfClientRpc(Vector3 jailPosition,
         ClientRpcParams clientRpcParams = default)
     {
+        // Runs on the arrested player's own client. Because this client owns the
+        // ClientNetworkTransform, moving transform here is the authoritative move
+        // and propagates to everyone else.
         transform.position = jailPosition;
+        Debug.Log("Hello from TeleportSelf Client RPC");
 
         Rigidbody rb = GetComponent<Rigidbody>();
         if (rb != null && !rb.isKinematic)

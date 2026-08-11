@@ -3743,8 +3743,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MapGeneration.MallGenerator
   ShowTopMostFoldoutHeaderGroup: 1
-  testWidth: 5
-  testHeight: 5
+  config: {fileID: 11400000, guid: ba13191a80c860f4a9708d2b7b5012b2, type: 2}
+  testPlayerCount: 4
+  testRobberCount: 2
+  maxGenerationAttempts: 25
 --- !u!4 &2038825373
 Transform:
   m_ObjectHideFlags: 0

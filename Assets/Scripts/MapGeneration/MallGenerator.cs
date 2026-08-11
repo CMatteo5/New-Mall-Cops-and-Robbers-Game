@@ -5,11 +5,10 @@ using UnityEngine;
 namespace MapGeneration
 {
     /// <summary>
-    /// Owns the map seed, keeps it synced across the network, and builds + draws
-    /// the grid whenever the seed changes. This step fills the grid with a simple
-    /// TEST pattern (a two-cell cop office, a couple of stores, an extract, and a
-    /// path) just to prove the whole pipeline works and is visible. The real
-    /// layout algorithm replaces BuildTestGrid in Task 3.
+    /// Owns the map seed, keeps it synced across the network, and builds + draws a
+    /// real generated mall whenever the seed changes. Generation runs identically
+    /// on every machine from the shared seed. If a seed produces an invalid layout
+    /// (fails connectivity), it retries with a derived seed until one validates.
     /// </summary>
     [RequireComponent(typeof(MallVisualizer))]
     public class MallGenerator : NetworkBehaviour
@@ -20,12 +19,19 @@ namespace MapGeneration
             NetworkVariableWritePermission.Server);
 
         public int Seed => _seed.Value;
-        public SeededRng Rng { get; private set; }
         public MallGrid Grid { get; private set; }
 
-        [Header("Test Grid Size (temporary — Task 3 computes this from player count)")]
-        [SerializeField] private int testWidth = 5;
-        [SerializeField] private int testHeight = 5;
+        [Header("Config")]
+        [SerializeField] private GenerationConfig config;
+
+        [Header("Player / Robber Counts (temporary — wire to LobbyManager later)")]
+        [Tooltip("Used to size the grid. Later this reads from your lobby.")]
+        [SerializeField] private int testPlayerCount = 4;
+        [Tooltip("Used to decide extract count. Later this reads from your lobby.")]
+        [SerializeField] private int testRobberCount = 2;
+
+        [Tooltip("How many seeds to try before giving up, if layouts fail validation.")]
+        [SerializeField] private int maxGenerationAttempts = 25;
 
         private MallVisualizer _visualizer;
 
@@ -55,44 +61,46 @@ namespace MapGeneration
             Regenerate(current);
         }
 
-        /// <summary>Build the RNG, build the grid, draw it. Runs on every machine identically.</summary>
+        /// <summary>
+        /// Build and draw the mall from a seed. Runs identically on all machines.
+        /// Retries with derived seeds if a layout fails connectivity, so the result
+        /// is always a valid, fully-connected mall.
+        /// </summary>
         private void Regenerate(int seed)
         {
-            Rng = new SeededRng(seed);
-            Grid = BuildTestGrid(Rng);
-            _visualizer.Draw(Grid);
-            Debug.Log($"[MallGenerator] Regenerated from seed {seed}");
-        }
-
-        /// <summary>
-        /// TEMPORARY test layout. Places a 2-cell cop office, two stores, an
-        /// extract, and a short path — enough to confirm colors, the multi-cell
-        /// office, and world positioning all work. Task 3 replaces this entirely.
-        /// </summary>
-        private MallGrid BuildTestGrid(SeededRng rng)
-        {
-            MallGrid grid = new MallGrid(testWidth, testHeight);
-
-            // Two-cell cop office at the bottom-left (cells (0,0) and (0,1)).
-            grid.PlaceRoom(RoomType.CopOffice, new List<Vector2Int>
+            if (config == null)
             {
-                new Vector2Int(0, 0),
-                new Vector2Int(0, 1)
-            });
+                Debug.LogError("[MallGenerator] No GenerationConfig assigned.");
+                return;
+            }
 
-            // A couple of stores.
-            grid.PlaceRoom(RoomType.Store, new List<Vector2Int> { new Vector2Int(2, 0) });
-            grid.PlaceRoom(RoomType.Store, new List<Vector2Int> { new Vector2Int(2, 2) });
+            for (int attempt = 0; attempt < maxGenerationAttempts; attempt++)
+            {
+                // Derive a distinct seed per attempt so retries differ, but stay
+                // deterministic (same base seed -> same sequence of attempts).
+                int attemptSeed = seed + attempt * 7919; // 7919 is prime, spreads seeds
+                SeededRng rng = new SeededRng(attemptSeed);
 
-            // An extract in the far corner.
-            grid.PlaceRoom(RoomType.Extract, new List<Vector2Int> { new Vector2Int(4, 4) });
+                MallLayout layout = new MallLayout(config, rng);
+                layout.CreateGrid(testPlayerCount);
 
-            // A short path connecting toward the middle.
-            grid.PlacePath(1, 0);
-            grid.PlacePath(2, 1);
-            grid.PlacePath(3, 3);
+                bool ok = layout.PlaceCopOffice()
+                          && layout.PlaceExtracts(testRobberCount);
 
-            return grid;
+                if (ok)
+                {
+                    layout.PlacePathsAndStores();
+                    if (layout.ValidateConnectivity())
+                    {
+                        Grid = layout.Grid;
+                        _visualizer.Draw(Grid);
+                        Debug.Log($"[MallGenerator] Generated valid mall from seed {seed} (attempt {attempt + 1}).");
+                        return;
+                    }
+                }
+            }
+
+            Debug.LogWarning($"[MallGenerator] No valid layout after {maxGenerationAttempts} attempts for seed {seed}. Check config constraints.");
         }
 
         public void PickNewSeed()
@@ -110,7 +118,6 @@ namespace MapGeneration
             _seed.Value = seed;
         }
 
-        // Press G in Play mode (host) to regenerate with a new seed and watch it redraw.
         private void Update()
         {
             if (!IsServer) return;

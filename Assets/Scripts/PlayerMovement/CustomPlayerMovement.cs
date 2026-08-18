@@ -163,7 +163,9 @@ public class CustomPlayerMovement : NetworkBehaviour
             return;
         }
 
-        if (GameTimer.CurrentPhase != GamePhase.InProgress)
+        // Movement is allowed during both Lobby (free-roam, picking teams) and an
+        // active round - only frozen on the Ended win/lose screen.
+        if (GameTimer.CurrentPhase == GamePhase.Ended)
         {
             rb.linearVelocity = new Vector3(0f, rb.linearVelocity.y, 0f);
             return;
@@ -232,7 +234,7 @@ public class CustomPlayerMovement : NetworkBehaviour
 
     private void FixedUpdate()
     {
-        if (shopOpen || GameTimer.CurrentPhase != GamePhase.InProgress) return;
+        if (shopOpen || GameTimer.CurrentPhase == GamePhase.Ended) return;
 
         StepClimb();
         MovePlayer();

@@ -1527,6 +1527,9 @@ GameObject:
   - component: {fileID: 5514982724318216172}
   - component: {fileID: 4920875257004606050}
   - component: {fileID: 2981729035563204720}
+  - component: {fileID: 2963415806489810097}
+  - component: {fileID: 7172909930898275751}
+  - component: {fileID: 5606030042411233140}
   m_Layer: 0
   m_Name: NetworkPlayerCapsule
   m_TagString: Player
@@ -1686,7 +1689,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 2379219484
+  GlobalObjectIdHash: 829605351
   InScenePlacedSourceGlobalObjectIdHash: 829605351
   DeferredDespawnTick: 0
   Ownership: 1
@@ -1872,16 +1875,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerPickupController
   ShowTopMostFoldoutHeaderGroup: 1
   playerCamera: {fileID: 0}
-  holdPoint: {fileID: 6812052804713999728}
   promptText: {fileID: 0}
   promptPanel: {fileID: 0}
   pickupPromptFormat: Press E to pick up {0}
-  dropPrompt: Press E to drop
   pickupRange: 3
-  dropForwardOffset: 0.5
   pickupLayerMask:
     serializedVersion: 2
-    m_Bits: 64
+    m_Bits: 4294967295
   maxRaycastDistance: 50
 --- !u!114 &7324287094224651687
 MonoBehaviour:
@@ -1976,6 +1976,48 @@ MonoBehaviour:
   promptPanel: {fileID: 0}
   arrestPromptFormat: Press R to arrest {0}
   cooldownPromptFormat: Arrest on cooldown ({0:F1}s)
+--- !u!114 &2963415806489810097
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8261117547274716967}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bda513504f356514eb8dee8527c2f776, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TeamSelector
+  ShowTopMostFoldoutHeaderGroup: 1
+--- !u!114 &7172909930898275751
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8261117547274716967}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 80c01a33569a949439156ee5909b2eaf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerInventory
+  ShowTopMostFoldoutHeaderGroup: 1
+  itemRegistry: {fileID: 11400000, guid: a3ed3a7bd70161c4d82ae4a5d68312cd, type: 2}
+  hotbarSize: 5
+  storageSize: 20
+--- !u!114 &5606030042411233140
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8261117547274716967}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0a59470cb3b89a045b6d0e03895ecde8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerHeldItemVisual
+  ShowTopMostFoldoutHeaderGroup: 1
 --- !u!1 &8921269508670628065
 GameObject:
   m_ObjectHideFlags: 0

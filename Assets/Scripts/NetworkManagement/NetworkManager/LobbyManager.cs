@@ -6,6 +6,10 @@ public class LobbyManager : MonoBehaviour
 {
     public static LobbyManager Instance;
 
+    [Header("Team Settings")]
+    [Tooltip("Maximum number of players allowed on the Cops team at once. Adjustable in the Inspector.")]
+    [SerializeField] private int maxCops = 2;
+
     public int CopCount { get; private set; }
     public int RobberCount { get; private set; }
     public int PlayerCount { get; private set; }
@@ -61,9 +65,14 @@ public class LobbyManager : MonoBehaviour
         }
     }
 
-    public int MaxCops => Mathf.FloorToInt(PlayerCount / 2f);
-    public bool CanJoinCops => CopCount < MaxCops;
+    /// <summary>Cops team is capped at <see cref="maxCops"/> (set in the Inspector); Robbers are uncapped.</summary>
+    public bool CanJoinCops => CopCount < maxCops;
 
+    /// <summary>
+    /// Assigns (or re-assigns) a player's team. Robbers are uncapped, so players can
+    /// freely switch onto Robbers at any time. Cops are capped at maxCops - once full,
+    /// switching to Cops fails and the requester is notified.
+    /// </summary>
     public bool TryAssignTeam(NetworkObject player, PlayerTeams requestedTeam)
     {
         if (!IsServer) return false;
@@ -71,19 +80,21 @@ public class LobbyManager : MonoBehaviour
         PlayerTeam pt = player.GetComponent<PlayerTeam>();
         if (pt == null) return false;
 
+        if (pt.Team.Value == requestedTeam) return true; // already on this team - no-op
+
+        if (requestedTeam == PlayerTeams.Cop && !CanJoinCops) return false;
+
         if (pt.Team.Value == PlayerTeams.Cop) CopCount--;
         else if (pt.Team.Value == PlayerTeams.Robber) RobberCount--;
-
-        if (requestedTeam == PlayerTeams.Cop && !CanJoinCops)
-        {
-            if (pt.Team.Value == PlayerTeams.Cop) CopCount++;
-            else if (pt.Team.Value == PlayerTeams.Robber) RobberCount++;
-            return false;
-        }
 
         pt.Team.Value = requestedTeam;
         if (requestedTeam == PlayerTeams.Cop) CopCount++;
         else if (requestedTeam == PlayerTeams.Robber) RobberCount++;
+
+        // Picking a team no longer teleports you immediately - you stay at the
+        // default spawn point, free to walk around, until the host actually starts
+        // the game (GameTimer.TryStartGame calls SpawnManager.RespawnAllPlayers,
+        // which is the only place team-spawn teleporting happens now).
 
         return true;
     }

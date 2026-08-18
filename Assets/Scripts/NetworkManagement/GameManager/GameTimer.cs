@@ -1,23 +1,28 @@
 using UnityEngine;
-using UnityEngine.UI;
 using Unity.Netcode;
 using Unity.Cinemachine;
 using TMPro;
 
 public enum GamePhase
 {
-    WaitingToStart,
-    InProgress,
-    Ended
+    Lobby,       // players spawn at the default spawn point, can move/look around freely,
+                 // pick teams; no timer running, no win/lose evaluated
+    InProgress,  // round timer running, arrest/jail rules active
+    Ended        // win/lose screen shown
 }
 
 /// <summary>
-/// Server-authoritative game flow: start screen -> countdown -> win/lose screen -> restart.
-/// Only the host can start or restart the game; other players see waiting screens instead.
-/// Attach to a persistent networked scene object (e.g. your GameManager).
+/// Server-authoritative game flow: lobby (free movement, team picking, no timer) ->
+/// countdown -> win/lose screen -> restart. The round is started by a physical
+/// StartGameButton object in the world (see StartGameButton.cs) instead of a UI
+/// button - only the host's own player can trigger it, and only once every connected
+/// player has picked Cop or Robber. Attach to a persistent networked scene object
+/// (e.g. your GameManager).
 /// </summary>
 public class GameTimer : NetworkBehaviour
 {
+    public static GameTimer Instance { get; private set; }
+
     [Header("Timer Settings")]
     public float startingTime = 300f;
 
@@ -25,15 +30,10 @@ public class GameTimer : NetworkBehaviour
         0f, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
     private readonly NetworkVariable<GamePhase> phase = new NetworkVariable<GamePhase>(
-        GamePhase.WaitingToStart, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+        GamePhase.Lobby, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
     [Header("Timer UI")]
     public string timerTextObjectName = "TimerText";
-
-    [Header("Start Screen UI")]
-    public string startScreenPanelObjectName = "StartScreenPanel";
-    public string startGameButtonObjectName = "StartGameButton";
-    public string waitingForHostTextObjectName = "WaitingForHostText";
 
     [Header("Win/Lose Screen UI")]
     public string winLosePanelObjectName = "WinLosePanel";
@@ -46,26 +46,24 @@ public class GameTimer : NetworkBehaviour
 
     // Lets other scripts (like CustomPlayerMovement) check the current phase
     // without needing a direct reference to this NetworkBehaviour instance.
-    public static GamePhase CurrentPhase { get; private set; } = GamePhase.WaitingToStart;
+    public static GamePhase CurrentPhase { get; private set; } = GamePhase.Lobby;
 
     private TextMeshProUGUI timerText;
 
-    private GameObject startScreenPanel;
-    private Button startGameButton;
-    private GameObject waitingForHostTextObj;
-
     private GameObject winLosePanel;
     private TextMeshProUGUI resultText;
-    private Button restartButton;
+    private UnityEngine.UI.Button restartButton;
     private GameObject waitingForRestartTextObj;
 
     private GameObject crosshair;
+
+    private void Awake() => Instance = this;
 
     public override void OnNetworkSpawn()
     {
         if (IsServer)
         {
-            phase.Value = GamePhase.WaitingToStart;
+            phase.Value = GamePhase.Lobby;
             timeRemaining.Value = startingTime;
         }
 
@@ -77,7 +75,6 @@ public class GameTimer : NetworkBehaviour
         UpdatePhaseUI(phase.Value);
         UpdateTimerDisplay(timeRemaining.Value);
 
-        if (startGameButton != null) startGameButton.onClick.AddListener(OnStartButtonPressed);
         if (restartButton != null) restartButton.onClick.AddListener(OnRestartButtonPressed);
     }
 
@@ -86,16 +83,6 @@ public class GameTimer : NetworkBehaviour
         GameObject timerObj = GameObject.Find(timerTextObjectName);
         if (timerObj != null) timerText = timerObj.GetComponent<TextMeshProUGUI>();
 
-        startScreenPanel = GameObject.Find(startScreenPanelObjectName);
-        if (startScreenPanel != null)
-        {
-            Transform btnT = startScreenPanel.transform.Find(startGameButtonObjectName);
-            if (btnT != null) startGameButton = btnT.GetComponent<Button>();
-
-            Transform waitT = startScreenPanel.transform.Find(waitingForHostTextObjectName);
-            if (waitT != null) waitingForHostTextObj = waitT.gameObject;
-        }
-
         winLosePanel = GameObject.Find(winLosePanelObjectName);
         if (winLosePanel != null)
         {
@@ -103,7 +90,7 @@ public class GameTimer : NetworkBehaviour
             if (resultT != null) resultText = resultT.GetComponent<TextMeshProUGUI>();
 
             Transform restartT = winLosePanel.transform.Find(restartButtonObjectName);
-            if (restartT != null) restartButton = restartT.GetComponent<Button>();
+            if (restartT != null) restartButton = restartT.GetComponent<UnityEngine.UI.Button>();
 
             Transform waitRestartT = winLosePanel.transform.Find(waitingForRestartTextObjectName);
             if (waitRestartT != null) waitingForRestartTextObj = waitRestartT.gameObject;
@@ -118,15 +105,6 @@ public class GameTimer : NetworkBehaviour
 
         bool isHost = NetworkManager.Singleton != null && NetworkManager.Singleton.IsServer;
 
-        if (startScreenPanel != null)
-            startScreenPanel.SetActive(newPhase == GamePhase.WaitingToStart);
-
-        if (startGameButton != null)
-            startGameButton.gameObject.SetActive(isHost);
-
-        if (waitingForHostTextObj != null)
-            waitingForHostTextObj.SetActive(!isHost);
-
         if (winLosePanel != null)
             winLosePanel.SetActive(newPhase == GamePhase.Ended);
 
@@ -136,26 +114,27 @@ public class GameTimer : NetworkBehaviour
         if (waitingForRestartTextObj != null)
             waitingForRestartTextObj.SetActive(!isHost);
 
-        // Crosshair only makes sense during actual gameplay.
-        if (crosshair != null)
-            crosshair.SetActive(newPhase == GamePhase.InProgress);
+        // Crosshair makes sense any time the player is actually moving around - lobby
+        // included now, not just an active round.
+        bool controlsActive = newPhase == GamePhase.Lobby || newPhase == GamePhase.InProgress;
 
-        // Disable camera look input entirely outside of active gameplay,
-        // so the mouse can't rotate the player's view on the start/win/lose screens.
-        bool gameplayActive = newPhase == GamePhase.InProgress;
+        if (crosshair != null)
+            crosshair.SetActive(controlsActive);
 
         if (CameraRegistry.FirstPersonCamera != null)
         {
             var axisController = CameraRegistry.FirstPersonCamera.GetComponent<CinemachineInputAxisController>();
-            if (axisController != null) axisController.enabled = gameplayActive;
+            if (axisController != null) axisController.enabled = controlsActive;
         }
 
         var tpController = FindFirstObjectByType<ThirdPersonCameraController>();
-        if (tpController != null) tpController.enabled = gameplayActive;
+        if (tpController != null) tpController.enabled = controlsActive;
 
-        // Cursor should be free to click UI during the start/end screens,
-        // and locked for normal gameplay once the round is in progress.
-        if (newPhase == GamePhase.InProgress)
+        // Cursor is locked for character control during both Lobby and an active round,
+        // and freed on the win/lose screen so the Restart button is clickable. (Escape
+        // can still temporarily free the cursor mid-round via ServerLobbyUI, regardless
+        // of this.)
+        if (controlsActive)
         {
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
@@ -189,33 +168,41 @@ public class GameTimer : NetworkBehaviour
         timerText.text = $"{minutes:00}:{seconds:00}";
     }
 
-    /// <summary>Wired to the Start Game button. Host-only, double-checked server-side.</summary>
-    public void OnStartButtonPressed()
+    /// <summary>
+    /// Called by StartGameButton when the host's own player touches it. Host-only,
+    /// double-checked server-side, and only actually starts once every connected
+    /// player has picked Cop or Robber.
+    /// </summary>
+    public void TryStartGame()
     {
-        if (!IsServer || phase.Value != GamePhase.WaitingToStart) return;
+        if (!IsServer || phase.Value != GamePhase.Lobby) return;
+        if (!AllPlayersHaveChosenTeam()) return;
 
-        // Any player who never picked a team is dropped onto the Robbers
-        // when the round begins (mirrors the old LobbyManager.StartGame logic).
-        AssignUnassignedPlayersToRobbers();
+        // Send everyone to their team's spawn points for the round.
+        SpawnManager.Instance?.RespawnAllPlayers();
 
         timeRemaining.Value = startingTime;
         phase.Value = GamePhase.InProgress;
     }
 
-    /// <summary>Server-only: everyone still on team None becomes a Robber at round start.</summary>
-    private void AssignUnassignedPlayersToRobbers()
+    /// <summary>
+    /// Server-only: true only once there's at least one connected player and every
+    /// connected player has a team other than None.
+    /// </summary>
+    private bool AllPlayersHaveChosenTeam()
     {
-        if (!IsServer) return;
+        if (NetworkManager.Singleton.ConnectedClientsList.Count == 0) return false;
 
-        foreach (var obj in NetworkManager.Singleton.SpawnManager.SpawnedObjects.Values)
+        foreach (NetworkClient client in NetworkManager.Singleton.ConnectedClientsList)
         {
-            PlayerTeam pt = obj.GetComponent<PlayerTeam>();
-            if (pt != null && pt.Team.Value == PlayerTeams.None)
-            {
-                pt.Team.Value = PlayerTeams.Robber;
-                if (LobbyManager.Instance != null) LobbyManager.Instance.RegisterRobber();
-            }
+            NetworkObject playerObject = client.PlayerObject;
+            if (playerObject == null) continue;
+
+            PlayerTeam pt = playerObject.GetComponent<PlayerTeam>();
+            if (pt != null && pt.Team.Value == PlayerTeams.None) return false;
         }
+
+        return true;
     }
 
     /// <summary>Wired to the Restart button. Host-only, double-checked server-side.</summary>
@@ -232,6 +219,9 @@ public class GameTimer : NetworkBehaviour
             PlayerJailStatus jailStatus = playerObject.GetComponent<PlayerJailStatus>();
             if (jailStatus != null) jailStatus.SetInJail(false);
         }
+
+        // Send everyone to their team's spawn points for the new round.
+        SpawnManager.Instance?.RespawnAllPlayers();
 
         timeRemaining.Value = startingTime;
         phase.Value = GamePhase.InProgress;

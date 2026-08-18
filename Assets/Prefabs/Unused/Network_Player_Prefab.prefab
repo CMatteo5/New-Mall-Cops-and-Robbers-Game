@@ -1239,6 +1239,9 @@ GameObject:
   - component: {fileID: -6367045633712373800}
   - component: {fileID: -7473049859212863049}
   - component: {fileID: -2695366664101491435}
+  - component: {fileID: -6817876680847240781}
+  - component: {fileID: 2190770130901120674}
+  - component: {fileID: -357688377532374177}
   m_Layer: 8
   m_Name: Network_Player_Prefab
   m_TagString: Player
@@ -1495,7 +1498,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 86962359
+  GlobalObjectIdHash: 3061418326
   InScenePlacedSourceGlobalObjectIdHash: 0
   DeferredDespawnTick: 0
   Ownership: 1
@@ -1612,6 +1615,53 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!114 &-6817876680847240781
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4175286119504265838}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 36da3fd933e7c234dafb371ce63bfdfc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerTeam
+  ShowTopMostFoldoutHeaderGroup: 1
+  Team:
+    UpdateTraits:
+      MinSecondsBetweenUpdates: 0
+      MaxSecondsBetweenUpdates: 0
+    m_InternalValue: 0
+--- !u!114 &2190770130901120674
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4175286119504265838}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bda513504f356514eb8dee8527c2f776, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TeamSelector
+  ShowTopMostFoldoutHeaderGroup: 1
+--- !u!114 &-357688377532374177
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4175286119504265838}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 80c01a33569a949439156ee5909b2eaf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerInventory
+  ShowTopMostFoldoutHeaderGroup: 1
+  itemRegistry: {fileID: 11400000, guid: a3ed3a7bd70161c4d82ae4a5d68312cd, type: 2}
+  hotbarSize: 5
+  storageSize: 20
 --- !u!1 &4228572296107984891
 GameObject:
   m_ObjectHideFlags: 0

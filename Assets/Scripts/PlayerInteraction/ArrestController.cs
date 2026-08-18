@@ -17,7 +17,6 @@ public class ArrestController : NetworkBehaviour
 
     private float lastArrestTime = -10f;
     private PlayerTeam myTeam;
-    private PlayerPickupController pickupController;
 
     public bool CanArrest => Time.time >= lastArrestTime + arrestCooldown;
     public float CooldownRemaining => Mathf.Max(0f, (lastArrestTime + arrestCooldown) - Time.time);
@@ -31,7 +30,6 @@ public class ArrestController : NetworkBehaviour
         }
 
         myTeam = GetComponent<PlayerTeam>();
-        pickupController = GetComponent<PlayerPickupController>();
 
         if (promptText == null)
         {
@@ -128,14 +126,14 @@ public class ArrestController : NetworkBehaviour
         PlayerTeam targetTeam = target.GetComponent<PlayerTeam>();
         if (targetTeam == null || !targetTeam.IsRobber) return;
 
-        PlayerPickupController targetPickup = target.GetComponent<PlayerPickupController>();
-        if (targetPickup != null && targetPickup.CurrentItem != null)
-            targetPickup.CurrentItem.RequestDropServerRpc(target.transform.position);
+        // Items now live in the arrested player's PlayerInventory rather than being
+        // physically carried, so there's nothing to drop here - their inventory just
+        // persists through the jail trip like normal.
 
         // The arrested player owns their own transform (ClientNetworkTransform is
         // client-authoritative), so a server-side position write gets overwritten
         // by the owner's next sync. Instead, tell ONLY the arrested player's client
-        // to move itself — as the owner, its move is authoritative and replicates.
+        // to move itself ï¿½ as the owner, its move is authoritative and replicates.
         ArrestController targetArrest = target.GetComponent<ArrestController>();
         if (targetArrest != null)
         {

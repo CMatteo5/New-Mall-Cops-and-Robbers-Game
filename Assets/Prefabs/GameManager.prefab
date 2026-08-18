@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 4377556504022985853}
   - component: {fileID: 6506934788923952082}
   - component: {fileID: -5990350198443539815}
+  - component: {fileID: 4606557572216617149}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -111,5 +112,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7e3fd20d9fc923a48b1fff07e3fbc781, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::JailManager
-  ShowTopMostFoldoutHeaderGroup: 1
   jailSpawnPoint: {fileID: 0}
+--- !u!114 &4606557572216617149
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1267033787476391578}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 793490af94e030443b91d1256a691ae5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpawnManager
+  ShowTopMostFoldoutHeaderGroup: 1
+  copSpawnPoints:
+  - {fileID: 0}
+  robberSpawnPoints:
+  - {fileID: 0}
+  defaultSpawnPoints:
+  - {fileID: 0}

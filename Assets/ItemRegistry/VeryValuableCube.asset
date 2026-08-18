@@ -10,11 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: cfb9c6a02af62574d9382c2583e84a20, type: 3}
-  m_Name: RedCube
+  m_Name: VeryValuableCube
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
-  itemName: RedCube
-  cost: 15
-  sellPrice: 15
-  icon: {fileID: 21300000, guid: 8eaa2a33107248068fb6c7a1729d150e, type: 3}
-  prefab: {fileID: 7482711782514246126, guid: e83bf72df4032ba44b84c66812ee110a, type: 3}
-  description:
+  itemName: VeryValuableCube
+  cost: 999999
+  sellPrice: 11111111
+  icon: {fileID: 21300000, guid: 6b12aba57cef4f3e9fe53000e5a5c07e, type: 3}
+  prefab: {fileID: 4467557181426176769, guid: 883ce9bfd4f4e4a44b1882ae317cfc6e, type: 3}
+  description: 

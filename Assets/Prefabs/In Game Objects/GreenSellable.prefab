@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1001 &6496474548131812079
+--- !u!1001 &3349905984521913982
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -10,19 +10,23 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 402071802765315897, guid: 883ce9bfd4f4e4a44b1882ae317cfc6e, type: 3}
       propertyPath: GlobalObjectIdHash
-      value: 2695101591
+      value: 3458993059
+      objectReference: {fileID: 0}
+    - target: {fileID: 1992645779756305461, guid: 883ce9bfd4f4e4a44b1882ae317cfc6e, type: 3}
+      propertyPath: itemName
+      value: GreenCube
       objectReference: {fileID: 0}
     - target: {fileID: 2757310425166324528, guid: 883ce9bfd4f4e4a44b1882ae317cfc6e, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 99.137985
+      value: -1.7422996
       objectReference: {fileID: 0}
     - target: {fileID: 2757310425166324528, guid: 883ce9bfd4f4e4a44b1882ae317cfc6e, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.25001574
+      value: 0.25050366
       objectReference: {fileID: 0}
     - target: {fileID: 2757310425166324528, guid: 883ce9bfd4f4e4a44b1882ae317cfc6e, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 413.6489
+      value: 6.4535646
       objectReference: {fileID: 0}
     - target: {fileID: 2757310425166324528, guid: 883ce9bfd4f4e4a44b1882ae317cfc6e, type: 3}
       propertyPath: m_LocalRotation.w
@@ -54,12 +58,12 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4467557181426176769, guid: 883ce9bfd4f4e4a44b1882ae317cfc6e, type: 3}
       propertyPath: m_Name
-      value: Sellable Item (2) Variant
+      value: GreenSellable
       objectReference: {fileID: 0}
     - target: {fileID: 6069795748466268678, guid: 883ce9bfd4f4e4a44b1882ae317cfc6e, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: c2214dc5e4f95b44e9d71b541a8e4c55, type: 2}
+      objectReference: {fileID: 2100000, guid: 9c23b8158c0ec7d4eadacf5a1dde26b8, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
